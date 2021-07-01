@@ -232,6 +232,7 @@ class Create_Density:
 ##################  end definition class Create_Density #####################################
 
 
+<<<<<<< HEAD
 
 
 
@@ -317,6 +318,8 @@ def Detect_Square_Area_Max(pollution_list, x_now, y_now, z_now search_deepness):
 
 
 
+=======
+>>>>>>> origin/master
 ######################## main ###########################################
 def main():
     pollution_state = Create_Density(50)
