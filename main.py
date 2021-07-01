@@ -12,6 +12,8 @@ import collections
 ########################### Global Variables ################################
 field_x_length = 50
 field_y_length = 50
+noise_search_deepness = 15
+noise_threshold = 0.3
 #ノイズ閾値
 #ノイズ最高値
 #ノイズ最小値
@@ -232,7 +234,6 @@ class Create_Density:
 ##################  end definition class Create_Density #####################################
 
 
-<<<<<<< HEAD
 
 
 
@@ -242,7 +243,36 @@ class Create_Density:
 
 
 
-def Detect_Square_Area_Max(pollution_list, x_now, y_now, z_now search_deepness):
+def Detect_Square_Area_Max(pollution_list, x_now, y_now, z_now, search_deepness):
+
+
+    x_max = 0
+    y_max = 0
+    z_max = 0
+    max_value = 0
+
+
+    def te():
+
+        max_value = 2
+
+        return
+
+    def Update_Max(pollution_list, x, y, z, noise_threshold): #引数はグローバル変数と名前かぶっててもいけるのか？
+        nonlocal x_max
+        nonlocal y_max
+        nonlocal z_max
+        nonlocal max_value
+        if max_value < pollution_list[measure_x + x_1][measure_y + y_1][measure_z + z_1]:
+            if(Distinguish_Noise_Pollution(pollution_list, x, y, z, noise_search_deepness, noise_threshold)):
+                pass
+            else:
+                x_max = x
+                y_max = y
+                z_max = z
+                max_value = pollution_list[x][y][z]
+
+        return x_max, y_max, z_max, max_value
 
     x_now = abs(x_now)
     y_now = abs(y_now)
@@ -258,10 +288,7 @@ def Detect_Square_Area_Max(pollution_list, x_now, y_now, z_now search_deepness):
     measure_y = math.ceil(measure_y)
     measure_z = math.ceil(measure_z)
 
-    x_max = 0
-    y_max = 0
-    z_max = 0
-    max_value = 0
+
 
     array_limit = np.array(pollution_list)
     x_limit, y_limit, z_limit = array_limit.shape
@@ -273,38 +300,20 @@ def Detect_Square_Area_Max(pollution_list, x_now, y_now, z_now search_deepness):
             for z_1 in range(search_deepness):
                 if(0 < (measure_x + x_1) and 0 < (measure_y + y_1) and 0 < (measure_z + z_1)):
                     if((measure_x + x_1) < x_limit and (measure_y + y_1) < y_limit and (measure_z + z_1) < z_limit):
-                        if max_value < pollution_list[measure_x + x_1][measure_y + y_1][measure_z + z_1]:
-                            if(Distinguish_Noise_Pollution(pollution_list, measure_x + x_1, measure_y + y_1, measure_z + z_1, noise_search_deepness, noise_threshold)):
-                                pass
-                            else:
-                                max_value = pollution_list[measure_x + x_1][measure_y + y_1][measure_z + z_1]
-                                x_max = measure_x + x_1
-                                y_max = measure_y + y_1
-                                z_max = measure_z + z_1
-
+                        Update_Max(pollution_list, measure_x + x_1, measure_y + y_1, measure_z + z_1, noise_threshold)
                     elif((measure_x + x_1) < x_limit and (measure_y + y_1) < y_limit and z_limit < (measure_z + z_1)):
+                        Update_Max(pollution_list, measure_x + x_1, measure_y + y_1, measure_z + z_1 - (measure_z + z_1 - z_limit),  noise_threshold)
                     elif((measure_x + x_1) < x_limit and y_limit < (measure_y + y_1) and (measure_z + z_1) < z_limit):
+                        Update_Max(pollution_list, measure_x + x_1, measure_y + y_1 - (measure_y + y_1 - y_limit), measure_z + z_1,  noise_threshold)
                     elif((measure_x + x_1) < x_limit and y_limit < (measure_y + y_1) and z_limit < (measure_z + z_1)):
+                        Update_Max(pollution_list, measure_x + x_1, measure_y + y_1 - (measure_y + y_1 - y_limit), measure_z + z_1 - (measure_z + z_1 - z_limit), nnoise_threshold)
                     elif(x_limit < (measure_x + x_1) and (measure_y + y_1) < y_limit and (measure_z + z_1) < z_limit):
+                        Update_Max(pollution_list, measure_x + x_1 - (measure_x + x_1 - x_limit), measure_y + y_1, measure_z + z_1, noise_threshold)
                     elif(x_limit < (measure_x + x_1) and (measure_y + y_1) < y_limit and z_limit < (measure_z + z_1)):
-                    elif((measure_x + x_1) < x_limit and (measure_y + y_1) < y_limit and z_limit < (measure_z + z_1)):
-
-                    elif(x_limit < (measure_x + x_1) and (measure_y + y_1) < y_limit):
-                        if max_value < pollution_list[measure_x + x_1 - (measure_x + x_1 - x_limit)][measure_y + y_1]:
-                            if(Distinguish_Noise_Pollution(pollution_list, measure_x + x_1 - (measure_x + x_1 - x_limit), measure_y + y_1, noise_search_deepness, noise_threshold)):
-                                pass
-                            else:
-                                max_value = pollution_list[measure_x + x_1 - (measure_x + x_1 - x_limit)][measure_y + y_1]
-                                x_max = measure_x + x_1 - (measure_x + x_1 - x_limit)
-                                y_max = measure_y + y_1
-                    elif((measure_x + x_1) < x_limit and y_limit < (measure_y + y_1)):
-                        if max_value < pollution_list[measure_x + x_1][measure_y + y_1 - (measure_y + y_1 - y_limit)]:
-                            if(Distinguish_Noise_Pollution(pollution_list, measure_x + x_1, measure_y + y_1 - (measure_y + y_1 - y_limit), noise_search_deepness, noise_threshold)):
-                                pass
-                            else:
-                                max_value = pollution_list[measure_x + x_1][measure_y + y_1 - (measure_y + y_1 - y_limit)]
-                                x_max = measure_x + x_1
-                                y_max = measure_y + y_1 - (measure_y + y_1 - y_limit)
+                        Update_Max(pollution_list, measure_x + x_1 - (measure_x + x_1 - x_limit), measure_y + y_1, measure_z + z_1 - (measure_z + z_1 - z_limit),  noise_threshold)
+                    elif(x_limit < (measure_x + x_1) and y_limit  < (measure_y + y_1)  and (measure_z + z_1) < z_limit):
+                        Update_Max(pollution_list, measure_x + x_1 - (measure_x + x_1 - x_limit), measure_y + y_1 - (measure_y + y_1 - y_limit), measure_z + z_1,noise_threshold)
+#[measure_y + y_1 - (measure_y + y_1 - y_limit)]
                     elif((measure_x + x_1) < x_limit and (measure_y + y_1) < y_limit and (measure_z + z_1) < z_limit):
                         break
 
@@ -318,8 +327,7 @@ def Detect_Square_Area_Max(pollution_list, x_now, y_now, z_now search_deepness):
 
 
 
-=======
->>>>>>> origin/master
+
 ######################## main ###########################################
 def main():
     pollution_state = Create_Density(50)
@@ -332,6 +340,8 @@ def main():
     pollution_state.Adjust_Pollution(100, 0)
     pollution_state.create_random_pollution(1, 0, 0, 0, 50, 50, 50, 90, 1)
 
+    pollution_list = pollution_state.get_all_pollution_states()
+    x,y,z,pollute = Detect_Square_Area_Max(pollution_list, 15, 15, 15, 15)
 
     pollution_state.draw_pollution_map()
 
