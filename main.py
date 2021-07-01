@@ -241,6 +241,32 @@ class Create_Density:
 
 ################# Functions #############################################
 
+def Distinguish_Noise_Pollution(use_list, x_center_point, y_center_point, z_center_point, measure_area_length, threshold):
+
+    use_array = np.array(use_list)
+    x_limit, y_limit, z_limit = use_array.shape
+
+    sum = 0
+
+    for x_count in range(x_center_point - measure_area_length, x_center_point + measure_area_length, 1):
+        for y_count in range(y_center_point - measure_area_length, y_center_point + measure_area_length, 1):
+            for z_count in range(z_center_point - measure_area_length, z_center_point + measure_area_length, 1):
+                if((x_count < x_limit) and (y_count < y_limit) and (z_count < z_limit) and 0 <= x_count and 0 <= y_count and 0 <= z_count):
+                    sum += use_list[x_count][y_count][z_count]
+                else:
+                    pass
+
+    ave = sum / ((1 + 2 *(measure_area_length)) ** (2))
+
+    return use_list[x_center_point][y_center_point][z_center_point] - ave > threshold
+
+
+
+
+
+
+
+
 
 
 def Detect_Square_Area_Max(pollution_list, x_now, y_now, z_now, search_deepness):
@@ -338,10 +364,14 @@ def main():
 #    pollution_state.create_local_pollution(10,10,10,5,100)
 #    pollution_state.create_local_pollution(10,10,40,5,100)
     pollution_state.Adjust_Pollution(100, 0)
-    pollution_state.create_random_pollution(1, 0, 0, 0, 50, 50, 50, 90, 1)
+    #pollution_state.create_random_pollution(1, 0, 0, 0, 50, 50, 50, 90, 1)
 
     pollution_list = pollution_state.get_all_pollution_states()
-    x,y,z,pollute = Detect_Square_Area_Max(pollution_list, 15, 15, 15, 15)
+    x,y,z,pollute = Detect_Square_Area_Max(pollution_list, 0, 0, 0, 50)
+    print("square_area_max_x = " + str(x))
+    print("square_area_max_y = " + str(y))
+    print("square_area_max_z = " + str(z))
+    print("square_area_max_pollution = " + str(pollute))
 
     pollution_state.draw_pollution_map()
 
