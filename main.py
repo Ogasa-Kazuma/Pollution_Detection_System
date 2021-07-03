@@ -152,7 +152,7 @@ class Create_Density:
         del_count = 0
 
         for index_count in range(len(Alpha)):
-            if(Alpha[index_count] < 70): #指定した濃度値より低い場合は、その要素と、対応する座標を削除する
+            if(Alpha[index_count] < 95): #指定した濃度値より低い場合は、その要素と、対応する座標を削除する
                 del_index_list.append(index_count)
 
         #delするときにAlphaと要素数を合わせるために一次元に
@@ -262,6 +262,14 @@ def Distinguish_Noise_Pollution(use_list, x_center_point, y_center_point, z_cent
 
 
 
+def Calculate_Degree(start_x_value , start_y_value , start_z_value, end_x_value , end_y_value, end_z_value):
+    two_dimension_angle = 0
+    two_dimension_angle = math.degrees(math.atan2((end_y_value - start_y_value) , (end_x_value - start_x_value)))
+    two_dimension_length = math.sqrt((end_y_value - start_y_value) ** (2) + (end_x_value - start_x_value) ** (2))
+    three_dimension_angle = math.degrees(math.atan2((end_z_value - start_z_value) , two_dimension_length))
+    return two_dimension_angle, three_dimension_angle
+
+
 
 
 
@@ -278,12 +286,9 @@ def Detect_Square_Area_Max(pollution_list, x_now, y_now, z_now, search_deepness)
     max_value = 0
 
 
-    def te():
 
-        max_value = 2
 
-        return
-
+############## Function Update_Max #####################################
     def Update_Max(pollution_list, x, y, z, noise_threshold): #引数はグローバル変数と名前かぶっててもいけるのか？
         nonlocal x_max
         nonlocal y_max
@@ -367,13 +372,15 @@ def main():
     #pollution_state.create_random_pollution(1, 0, 0, 0, 50, 50, 50, 90, 1)
 
     pollution_list = pollution_state.get_all_pollution_states()
-    x,y,z,pollute = Detect_Square_Area_Max(pollution_list, 0, 0, 0, 50)
+    x,y,z,pollute = Detect_Square_Area_Max(pollution_list, 0, 0, 0, 100)
     print("square_area_max_x = " + str(x))
     print("square_area_max_y = " + str(y))
     print("square_area_max_z = " + str(z))
     print("square_area_max_pollution = " + str(pollute))
 
     pollution_state.draw_pollution_map()
+
+    Calculate_Degree(0, 0, 0, 10, 10, 14.141414)
 
 ####################### main ############################################
 
