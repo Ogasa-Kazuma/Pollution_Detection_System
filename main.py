@@ -305,6 +305,122 @@ def Calculate_Degree(start_x_value , start_y_value , start_z_value, end_x_value 
 
 
 
+###########################################################################
+# Detect_Max
+#
+# 指定された線上の、濃度を計測し、最高濃度値とその座標を返す。
+# ただし引数により求まる初期濃度値より高い濃度値を得られなければ、初期濃度値をそのまま返す
+# 濃度値の更新があれば、その時点での値と座標を散布図にオレンジ色で表示する
+# 関数を実行して求まった最高濃度の座標を散布図に緑色で表示する
+#
+#　戻り値(濃度最高点のx座標、y座標、そしてその濃度値)
+# 濃度の最高値が、x_startとy_startの地点だった場合（つまり濃度値の初期値が最大値だった場合)、初期座標と初期濃度を返す
+# 最初に渡された座標が、測定範囲外(フィールドサイズを超えてた場合)、初期座標と初期濃度を返す
+# 初期濃度より高い濃度が更新された場合、その座標と濃度を返す
+#
+###########################################################################
+
+def Detect_Max(pollution_list, x_start, y_start, z_start, xy_angle, xz_angle, search_deepness):
+
+    print("--------------------------- Func Detect_Max -----------------------------------------")
+    x_now = x_start
+    y_now = y_start
+    z_now = z_start
+    start_density = pollution_list[x_start][y_start][z_start]
+
+    print(start_density)
+    near_x = 0
+    near_y = 0
+    near_z = 0
+
+    #X_startやy_startを代入しているのは、引数で与えられた座標(つまり測定の初期座標)が測定不可域であった場合に
+    #濃度の最大値の更新が行われていないので、戻り値として初期座標を返すためである
+    x_max = x_start
+    y_max = y_start
+    z_max = z_start
+    max_density = pollution_list[x_start][y_start][z_start]
+
+    #pollution_listのx方向、y方向それぞれの要素数を取得する。探索不可域の設定に用いる(x_limit, y_limitの外側は探索できない)
+    array_limit = np.array(pollution_list)
+    x_limit, y_limit, z_limit = array_limit.shape
+    print(array_limit.shape)
+
+    first_vector_length = 1
+    search_vector_length = first_vector_length
+
+    #while(search_vector_length <= search_deepness):
+    #x_now - x_startなどは、探索を行った深さを表す。その深さが決められた長さ(search_deepness)を超えない限り、探索ループは続く。
+    while(abs(abs(x_now) - x_start) < search_deepness and abs(abs(y_now) - y_start) < search_deepness and abs(abs(z_now) - z_start) < search_deepness):
+        #進行方向の座標計算
+        #初期座標　+  初期座標からの x(もしくはy)座標の変化量
+        near_x = x_start + search_vector_length * math.cos(math.radians(xy_angle))
+        near_y = y_start + search_vector_length * math.sin(math.radians(xy_angle))
+        near_z = z_start + search_vector_length * math.sin(math.radians(xz_angle))
+
+        #座標値は小数なし（整数）なので、近傍のどのx,y座標が最も近いか比較し、最も近い値に座標値を設定する。
+        #例えば8.6は、 7, 8, 9のなかで最も9に近いため、探索に用いる座標も9にする
+        if(abs(x_now - near_x) < abs((x_now + 1) - near_x)):
+            if(abs((x_now - 1) - near_x) < abs(x_now - near_x)):
+                x_now = x_now - 1
+            else:
+                x_now = x_now
+        else:
+            x_now += 1
+
+        if(abs(y_now - near_y) < abs((y_now + 1) - near_y)):
+            if(abs((y_now - 1) - near_y) < abs(y_now - near_y)):
+                y_now = y_now - 1
+            else:
+                y_now = y_now
+        else:
+            y_now += 1
+
+        if(abs(z_now - near_z) < abs((z_now + 1) - near_z)):
+            if(abs((z_now - 1) - near_z) < abs(z_now - near_z)):
+                z_now = z_now - 1
+            else:
+                z_now = z_now
+        else:
+            z_now += 1
+
+
+        #初めから、探索不可能領域にx座標、y座標の少なくともどちらかが入っていた場合、最高値は更新せず、引数で渡されたx,yと濃度値を返す
+        if(x_limit <= x_now or y_limit <= y_now or z_limit <= z_now): # <= ではなく < にするとリストの容量を超える
+            if(search_vector_length == first_vector_length):
+                return x_start, y_start, z_start, start_density
+            #初めから探索不可能領域に入っていた場合ではなく、探索を続けているうちに探索不可能領域に入った場合、その時点での最高濃度値とその座標を返す
+            else:
+                return x_max, y_max, z_max, max_density
+            #引数で渡された初期座標が0より小さい場合（探索不可能）、その座標と、その座標での濃度値をそのまま返す。ただ、濃度リストにはマイナス座標での値は存在しないため、このifが実行される前にエラーとなる
+        elif(x_now < 0 or y_now < 0 or z_now < 0):
+                if(search_vector_length == first_vector_length):
+                    return x_start, y_start, z_start, start_density
+                #探索を続けるうちにx,y座標がマイナスになった場合は処理を終了し、その座標と、その地点での濃度値を返す
+                else:
+                    return x_max, y_max, z_max, max_density
+
+        #濃度最高値を発見した場合の処理。その最高濃度値がノイズによるものかどうかをif-elseで判断
+        if(max_density < pollution_list[x_now][y_now][z_now]):
+            #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+            if(Distinguish_Noise_Pollution(pollution_list, x_now, y_now, z_now, noise_search_deepness, noise_threshold)):
+                pass
+            #新たな最高濃度がノイズによるものでないと判断した場合、座標と最高濃度値を更新
+            else:
+
+                max_density = pollution_list[x_now][y_now][z_now]
+                x_max = x_now
+                y_max = y_now
+                z_max = z_now
+                print("Func DM latest max = " + str(max_density))
+        #次に探索する場所は今より、1進んだ場所なので探索する長さを伸ばす
+        search_vector_length += 1
+
+    #この関数の実行を行った結果、見つかった最高濃度値の座標を散布図に緑色の点で表示する。
+    #ただし、測定不可域に入り、関数の処理がreturnにより終了した場合は、最高濃度値・座標は散布図に表示されない。
+    print("Func DM max_pollution = " + str(max_density))
+    print("----------------------------------------------------------")
+    return x_max, y_max, z_max, max_density
+
 
 
 
@@ -323,7 +439,7 @@ def Detect_Square_Area_Max(pollution_list, x_now, y_now, z_now, search_deepness)
 
 
 ############## Function Update_Max #####################################
-    def Update_Max(pollution_list, x, y, z, noise_threshold): #引数はグローバル変数と名前かぶっててもいけるのか？
+    def Update_Max(pollution_list, x, y, z, noise_threshold):
         nonlocal x_max
         nonlocal y_max
         nonlocal z_max
@@ -410,13 +526,14 @@ def main():
     print("no_noise_z_max = " + str(no_noise_z_max))
     print("max_pollution = " + str(max_pollution))
 
-    print
     pollution_list = pollution_state.get_all_pollution_states()
     x,y,z,pollute = Detect_Square_Area_Max(pollution_list, 0, 0, 0, 100)
     print("square_area_max_x = " + str(x))
     print("square_area_max_y = " + str(y))
     print("square_area_max_z = " + str(z))
     print("square_area_max_pollution = " + str(pollute))
+
+    Detect_Max(pollution_list, 1, 1, 1, 45, 45, 50)
 
     pollution_state.draw_pollution_map()
 
