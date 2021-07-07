@@ -78,6 +78,40 @@ class Create_Density:
                     return ret_list_local_pollution
 
 
+    def get_no_noise_max_pollution_point(self):
+
+        no_noise_base_pollution_list = [[[0.0 for j in range(self.__field_size)] for l in range(self.__field_size)] for k in range(self.__field_size)]
+
+        for x_count in range(self.__field_size):
+            for y_count in range(self.__field_size):
+                for z_count in range(self.__field_size):
+                    no_noise_base_pollution_list[x_count][y_count][z_count] = self.__base_pollution_list[x_count][y_count][z_count] - self.__list_random_pollution[x_count][y_count][z_count]
+
+        #selfを付けないと、クラス内でも関数内ローカル変数を定義することが出来る
+        no_noise_x_max = 0
+        no_noise_y_max = 0
+        no_noise_z_max = 0
+
+
+        #アスタリスクの作用について検証
+        max_no_noise_pollution = max(chain(*chain(*no_noise_base_pollution_list)))
+        print(chain(*chain(*no_noise_base_pollution_list)))
+
+
+        print('max_no_noise_pollution' + str(max_no_noise_pollution))
+
+        for x_count in range(self.__field_size):
+            for y_count in range(self.__field_size):
+                for z_count in range(self.__field_size):
+                    if(max_no_noise_pollution == no_noise_base_pollution_list[x_count][y_count][z_count]):
+                        no_noise_x_max = x_count
+                        no_noise_y_max = y_count
+                        no_noise_z_max = z_count
+
+        return no_noise_x_max, no_noise_y_max, no_noise_z_max, no_noise_base_pollution_list[no_noise_x_max][no_noise_y_max][no_noise_z_max]
+
+
+
     def create_random_pollution(self, probability, start_x, start_y, start_z, end_x, end_y, end_z, upper_limit, lower_limit):
 
         print(100 - probability)
@@ -152,7 +186,7 @@ class Create_Density:
         del_count = 0
 
         for index_count in range(len(Alpha)):
-            if(Alpha[index_count] < 95): #指定した濃度値より低い場合は、その要素と、対応する座標を削除する
+            if(Alpha[index_count] < 80): #指定した濃度値より低い場合は、その要素と、対応する座標を削除する
                 del_index_list.append(index_count)
 
         #delするときにAlphaと要素数を合わせるために一次元に
@@ -178,7 +212,7 @@ class Create_Density:
         #X, Y, Z, はfloatかarray-like、　カラーcはarray-likeなもの、つまりリストとかがいい。
         #リストとかではなく、単一の値を、for文を使って一つずつ当てはめていく方法は上手くいかない。
         #たぶん scatter3Dの文が一回しか使えないのか？最初の一回目の実行しか適用されてなかった。
-        sc = ax1.scatter3D(X, Y, Z , c = Alpha, s = 3, cmap = 'binary',alpha = 0.3, vmin= 0, vmax=100)
+        sc = ax1.scatter3D(X, Y, Z , c = Alpha, s = 0.1, cmap = 'binary',alpha = 0.3, vmin= 0, vmax=100)
         sc2 = ax2.scatter3D(X, Y, Z , c = Alpha, cmap = 'binary',alpha = 0.3, vmin= 0, vmax=100)
         fig.colorbar(sc)
         fig.colorbar(sc2)
@@ -369,8 +403,14 @@ def main():
 #    pollution_state.create_local_pollution(10,10,10,5,100)
 #    pollution_state.create_local_pollution(10,10,40,5,100)
     pollution_state.Adjust_Pollution(100, 0)
-    #pollution_state.create_random_pollution(1, 0, 0, 0, 50, 50, 50, 90, 1)
+    pollution_state.create_random_pollution(15, 0, 0, 0, 50, 50, 50, 100, 1)
+    no_noise_x_max, no_noise_y_max, no_noise_z_max, max_pollution = pollution_state.get_no_noise_max_pollution_point()
+    print("no_noise_x_max = " + str(no_noise_x_max))
+    print("no_noise_y_max = " + str(no_noise_y_max))
+    print("no_noise_z_max = " + str(no_noise_z_max))
+    print("max_pollution = " + str(max_pollution))
 
+    print
     pollution_list = pollution_state.get_all_pollution_states()
     x,y,z,pollute = Detect_Square_Area_Max(pollution_list, 0, 0, 0, 100)
     print("square_area_max_x = " + str(x))
