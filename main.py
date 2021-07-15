@@ -360,16 +360,120 @@ def Search_Pollution_On_Arc(pollution_list, start_position_list, rotate_directio
                 max_list[2] = z_now
                 max_list[3] = pollution_list[x_now][y_now][z_now]
 
+
         if(rotate_direction == True):
             search_angle = search_angle + angle_change_amount
         else:
             search_angle = search_angle - angle_change_amount
 
 
+
     print(max_list)
 
 
     return max_list
+
+
+
+
+
+def Search_Pollution_On_Arc_2D(pollution_list, start_position_list, rotate_direction, radius, start_angle, end_angle):
+
+    print("--------------------------- Func Search_Pollution_On_Arc -----------------------------------------")
+    x_now = start_position_list[0]
+    y_now = start_position_list[1]
+    start_density = pollution_list[x_now][y_now]
+
+    x_start = start_position_list[0]
+    y_start = start_position_list[1]
+
+    print(start_density)
+    near_x = 0
+    near_y = 0
+
+    #X_startやy_startを代入しているのは、引数で与えられた座標(つまり測定の初期座標)が測定不可域であった場合に
+    #濃度の最大値のstart_position_list[0]更新が行われていないので、戻り値として初期座標を返すためである
+    x_max = start_position_list[0]
+    y_max = start_position_list[1]
+    max_density = pollution_list[x_max][y_max]
+
+    max_list = list()
+    max_list.append(x_max)
+    max_list.append(y_max)
+    max_list.append(max_density)
+
+
+
+    #pollution_listのx方向、y方向それぞれの要素数を取得する。探索不可域の設定に用いる(x_limit, y_limitの外側は探索できない)
+    array_limit = np.array(pollution_list)
+    x_limit, y_limit = array_limit.shape
+
+
+    search_angle = start_angle
+    angle_change_amount = 1
+
+    #探索開始点と終了点の間の角度が0もしくは0に近いならば探索をしない
+    if(math.floor(end_angle - start_angle) == 0):
+        return
+
+    #Trueなら時計周りに探索を進め、Falseなら反時計回り
+    #rotate_direction = True if 0 < (end_angle - start_angle) else False
+
+
+    while(start_angle <= search_angle and search_angle <= end_angle):
+
+
+        #進行方向の座標計算
+        #初期座標　+  初期座標からの x(もしくはy)座標の変化量
+        near_x = x_start + radius * math.cos(math.radians(search_angle))
+        near_y = y_start + radius * math.sin(math.radians(search_angle))
+
+        print("x = " + str(near_x))
+        print("y = " + str(near_y))
+
+        if(abs(x_now - near_x) < abs((x_now + 1) - near_x)):
+            if(abs((x_now - 1) - near_x) < abs(x_now - near_x)):
+                x_now = x_now - 1
+            else:
+                x_now = x_now
+        else:
+            x_now += 1
+
+        if(abs(y_now - near_y) < abs((y_now + 1) - near_y)):
+            if(abs((y_now - 1) - near_y) < abs(y_now - near_y)):
+                y_now = y_now - 1
+            else:
+                y_now = y_now
+        else:
+            y_now += 1
+
+
+
+        if(x_now < 0 or x_limit < x_now or y_now < 0 or y_limit < y_now):
+            print("x or y out of area range")
+            #pass
+        else:
+            if(max_list[2] < pollution_list[x_now][y_now]):
+                print("in loop")
+                max_list[0] = x_now
+                max_list[1] = y_now
+                max_list[2] = pollution_list[x_now][y_now]
+                plt.scatter(x_now, y_now, c = "yellow")
+
+
+        if(rotate_direction == True):
+            search_angle = search_angle + angle_change_amount
+        else:
+            search_angle = search_angle - angle_change_amount
+
+
+
+    print(max_list)
+
+
+    return max_list
+
+
 
 ######################################################
 ## Func Execute_2D_Search
@@ -412,12 +516,25 @@ def Execute_2D_Search():
 
     max_pollution_density = 0
 
-    x_max, y_max, max_pollution_density = searching_methods_2D.Detect_Square_Area_Max(pollution_list, x_start, y_start,search_deepness)
-    plt.scatter(x_max, y_max, c = 'blue')
-    moving_angle = searching_methods_2D.Calculate_Degree(x_start, y_start, x_max, y_max)
 
-    #Search_Pollution(濃度リスト、基準方向、始点x座標、始点y座標、時計回り上限角度、反時計周り上限角度、角度ステップ、探索深さ)
-    x_max, y_max, max_pollution_density = searching_methods_2D.Detect_Pollution_Origin(pollution_list, x_max, y_max, 0, 0, 135, 135, 6, 15)
+    position_list = list()
+    position_list.append(x_start)
+    position_list.append(y_start)
+
+    max_list = list()
+    max_list = Search_Pollution_On_Arc_2D(pollution_list, position_list, True, 20, 10, 180)
+
+    Search_Pollution_On_Arc_2D(pollution_list, position_list, True, 40, 10, 180)
+######################################################3
+#     x_max, y_max, max_pollution_density = searching_methods_2D.Detect_Square_Area_Max(pollution_list, x_start, y_start,search_deepness)
+#     plt.scatter(x_max, y_max, c = 'blue')
+#     moving_angle = searching_methods_2D.Calculate_Degree(x_start, y_start, x_max, y_max)
+#
+#     #Search_Pollution(濃度リスト、基準方向、始点x座標、始点y座標、時計回り上限角度、反時計周り上限角度、角度ステップ、探索深さ)
+#     x_max, y_max, max_pollution_density = searching_methods_2D.Detect_Pollution_Origin(pollution_list, x_max, y_max, 0, 0, 135, 135, 6, 15)
+# #####################################################
+
+    x_max, y_max, max_pollution_density = max_list[0], max_list[1], max_list[2]
 
     print('真の濃度最高点 x座標  ' + str(no_noise_x_max))
     print('真の濃度最高点 y座標  ' + str(no_noise_y_max))
