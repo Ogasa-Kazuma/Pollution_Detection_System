@@ -75,6 +75,12 @@ def Calculate_Degree(start_x_value , start_y_value , start_z_value, end_x_value 
     three_dimension_angle = math.degrees(math.atan2((end_z_value - start_z_value) , two_dimension_length))
     return two_dimension_angle, three_dimension_angle
 
+def Calculate_Degree_2D(start_pos_poll_list, end_pos_poll_list):
+
+    two_dimension_angle = math.degrees(math.atan2((end_pos_poll_list[1] - start_pos_poll_list[1]) , (end_pos_poll_list[0] - start_pos_poll_list[0])))
+
+    return two_dimension_angle
+
 
 
 ###########################################################################
@@ -449,9 +455,8 @@ def Search_Pollution_On_Arc_2D(pollution_list, start_position_list, rotate_direc
 
 
 
-        if(x_now < 0 or x_limit < x_now or y_now < 0 or y_limit < y_now):
-            print("x or y out of area range")
-            #pass
+        if(x_now < 0 or x_limit <= x_now or y_now < 0 or y_limit <= y_now):
+            pass
         else:
             if(max_list[2] < pollution_list[x_now][y_now]):
                 print("in loop")
@@ -475,6 +480,75 @@ def Search_Pollution_On_Arc_2D(pollution_list, start_position_list, rotate_direc
 
 
 
+def Circular_Survey(pollution_state_2D, searching_methods_2D):
+
+    pollution_state_2D.Auto_Pollutions_Create(15, 0.5)
+
+    pollution_state_2D.Adjust_Pollution(1, 0.5, 0)
+    no_noise_x_max, no_noise_y_max, no_noise_max_pollution = pollution_state_2D.get_no_noise_max_pollution_point()
+
+    no_noise_pos_poll_list = list()
+    no_noise_pos_poll_list.append(no_noise_x_max)
+    no_noise_pos_poll_list.append(no_noise_y_max)
+    no_noise_pos_poll_list.append(no_noise_max_pollution)
+
+
+    print(no_noise_max_pollution)
+    pollution_state_2D.draw_pollution_map(2,2,1)
+
+    plt.scatter(no_noise_x_max, no_noise_y_max, c = 'red', alpha = no_noise_max_pollution)
+
+    pollution_state_2D.draw_pollution_map(2,2,2)
+
+    pollution_list = pollution_state_2D.get_all_pollution_states()
+    pollution_list = tuple(pollution_list)
+
+    search_deepness = 20
+    x_start = 0
+    y_start = 0
+    x_max = 0
+    y_max = 0
+
+    max_pollution_density = 0
+
+
+    start_pos_poll_list = list()
+    start_pos_poll_list.append(x_start)
+    start_pos_poll_list.append(y_start)
+    start_pos_poll_list.append(max_pollution_density)
+
+    last_max_list = start_pos_poll_list
+
+    searching_range = 30 #探索開始点からの最大探索距離。この範囲を超えると探索打ち切り
+    searching_length_now = 0
+
+    max_pos_poll_list = searching_methods_2D.Detect_Square_Area_Max(pollution_list, start_pos_poll_list, search_deepness)
+
+    while(True):
+        moving_angle = Calculate_Degree_2D(last_max_list, max_pos_poll_list)
+
+        while(searching_length_now <= searching_range):
+            now_pos_poll_list = Search_Pollution_On_Arc_2D(pollution_list, max_pos_poll_list, True, searching_length_now, 10, 180)
+            if(max_pos_poll_list[2] < now_pos_poll_list[2]):
+                searching_length_now = 0
+                last_max_list = max_pos_poll_list
+                max_pos_poll_list = now_pos_poll_list
+                plt.scatter(now_pos_poll_list[0], now_pos_poll_list[1], c = "green", alpha = 1)
+                break
+
+            if(searching_length_now < 5):
+                searching_length_now += 1
+            else:
+                searching_length_now = searching_length_now + searching_range / 5
+
+            if(searching_range < searching_length_now):
+                return max_pos_poll_list, no_noise_pos_poll_list
+
+
+
+
+
+
 ######################################################
 ## Func Execute_2D_Search
 ##
@@ -487,44 +561,50 @@ def Execute_2D_Search():
     pollution_state_2D = Pollution_State_2D_lib.Pollution_State_2D(20,50)
     searching_methods_2D = Pollution_Search_2D.Search_Methods_2D(30)
 
-    pollution_state_2D.Auto_Pollutions_Create(15, 0.5)
 
-    pollution_state_2D.Adjust_Pollution(1, 0.5, 0)
-    no_noise_x_max, no_noise_y_max, no_noise_max_pollution = pollution_state_2D.get_no_noise_max_pollution_point()
-
-    print(no_noise_max_pollution)
-    pollution_state_2D.draw_pollution_map(2,2,1)
-
-    plt.scatter(no_noise_x_max, no_noise_y_max, c = 'red', alpha = no_noise_max_pollution)
-
-
-    pollution_state_2D.draw_pollution_map(2,2,2)
+    max_list, no_noise_pos_poll_list = Circular_Survey(pollution_state_2D, searching_methods_2D)
 
 
 
 
-    pollution_list = pollution_state_2D.get_all_pollution_states()
-    pollution_list = tuple(pollution_list)
+
+    # pollution_state_2D.Auto_Pollutions_Create(15, 0.5)
+    #
+    # pollution_state_2D.Adjust_Pollution(1, 0.5, 0)
+    # no_noise_x_max, no_noise_y_max, no_noise_max_pollution = pollution_state_2D.get_no_noise_max_pollution_point()
+    #
+    # print(no_noise_max_pollution)
+    # pollution_state_2D.draw_pollution_map(2,2,1)
+    #
+    # plt.scatter(no_noise_x_max, no_noise_y_max, c = 'red', alpha = no_noise_max_pollution)
+    #
+    # pollution_state_2D.draw_pollution_map(2,2,2)
 
 
 
-    search_deepness = 20
-    x_start = 0
-    y_start = 0
-    x_max = 0
-    y_max = 0
 
-    max_pollution_density = 0
+    # pollution_list = pollution_state_2D.get_all_pollution_states()
+    # pollution_list = tuple(pollution_list)
 
 
-    position_list = list()
-    position_list.append(x_start)
-    position_list.append(y_start)
 
-    max_list = list()
-    max_list = Search_Pollution_On_Arc_2D(pollution_list, position_list, True, 20, 10, 180)
+    # search_deepness = 20
+    # x_start = 0
+    # y_start = 0
+    # x_max = 0
+    # y_max = 0
+    #
+    # max_pollution_density = 0
+    #
+    #
+    # position_list = list()
+    # position_list.append(x_start)
+    # position_list.append(y_start)
+    #
+    # max_list = list()
+    # max_list = Search_Pollution_On_Arc_2D(pollution_list, position_list, True, 20, 10, 180)
 
-    Search_Pollution_On_Arc_2D(pollution_list, position_list, True, 40, 10, 180)
+    # Search_Pollution_On_Arc_2D(pollution_list, position_list, True, 40, 10, 180)
 ######################################################3
 #     x_max, y_max, max_pollution_density = searching_methods_2D.Detect_Square_Area_Max(pollution_list, x_start, y_start,search_deepness)
 #     plt.scatter(x_max, y_max, c = 'blue')
@@ -535,6 +615,7 @@ def Execute_2D_Search():
 # #####################################################
 
     x_max, y_max, max_pollution_density = max_list[0], max_list[1], max_list[2]
+    no_noise_x_max, no_noise_y_max, no_noise_max_pollution = no_noise_pos_poll_list[0],  no_noise_pos_poll_list[1], no_noise_pos_poll_list[2]
 
     print('真の濃度最高点 x座標  ' + str(no_noise_x_max))
     print('真の濃度最高点 y座標  ' + str(no_noise_y_max))
