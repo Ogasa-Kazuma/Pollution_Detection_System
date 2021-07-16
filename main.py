@@ -386,12 +386,12 @@ def Search_Pollution_On_Arc(pollution_list, start_position_list, rotate_directio
 def Search_Pollution_On_Arc_2D(pollution_list, start_position_list, rotate_direction, radius, start_angle, end_angle):
 
     print("--------------------------- Func Search_Pollution_On_Arc -----------------------------------------")
-    x_now = start_position_list[0]
-    y_now = start_position_list[1]
-    start_density = pollution_list[x_now][y_now]
+    x_now = round(start_position_list[0] + radius * math.cos(math.radians(start_angle)))
+    y_now = round(start_position_list[1] + radius * math.sin(math.radians(start_angle)))
 
     x_start = start_position_list[0]
     y_start = start_position_list[1]
+    start_density = pollution_list[x_start][y_start]
 
     print(start_density)
     near_x = 0
@@ -434,8 +434,7 @@ def Search_Pollution_On_Arc_2D(pollution_list, start_position_list, rotate_direc
         near_x = x_start + radius * math.cos(math.radians(search_angle))
         near_y = y_start + radius * math.sin(math.radians(search_angle))
 
-        print("x = " + str(near_x))
-        print("y = " + str(near_y))
+
 
         if(abs(x_now - near_x) < abs((x_now + 1) - near_x)):
             if(abs((x_now - 1) - near_x) < abs(x_now - near_x)):
@@ -453,7 +452,8 @@ def Search_Pollution_On_Arc_2D(pollution_list, start_position_list, rotate_direc
         else:
             y_now += 1
 
-
+        if(0 < x_now and x_now  <= x_limit and 0 < y_now and y_now <= y_limit):
+            plt.scatter(x_now, y_now, c = 'orange', alpha = 0.1)
 
         if(x_now < 0 or x_limit <= x_now or y_now < 0 or y_limit <= y_now):
             pass
@@ -474,6 +474,7 @@ def Search_Pollution_On_Arc_2D(pollution_list, start_position_list, rotate_direc
 
 
     print(max_list)
+    plt.scatter(max_list[0], max_list[1], c = 'blue', alpha = 1)
 
 
     return max_list
@@ -503,9 +504,9 @@ def Circular_Survey(pollution_state_2D, searching_methods_2D):
     pollution_list = pollution_state_2D.get_all_pollution_states()
     pollution_list = tuple(pollution_list)
 
-    search_deepness = 20
-    x_start = 0
-    y_start = 0
+    search_deepness = 10
+    x_start = 25
+    y_start = 25
     x_max = 0
     y_max = 0
 
@@ -518,6 +519,8 @@ def Circular_Survey(pollution_state_2D, searching_methods_2D):
     start_pos_poll_list.append(max_pollution_density)
 
     last_max_list = start_pos_poll_list
+    
+    plt.scatter(x_start, y_start, c = 'aqua')
 
     searching_range = 30 #探索開始点からの最大探索距離。この範囲を超えると探索打ち切り
     searching_length_now = 0
@@ -528,7 +531,7 @@ def Circular_Survey(pollution_state_2D, searching_methods_2D):
         moving_angle = Calculate_Degree_2D(last_max_list, max_pos_poll_list)
 
         while(searching_length_now <= searching_range):
-            now_pos_poll_list = Search_Pollution_On_Arc_2D(pollution_list, max_pos_poll_list, True, searching_length_now, 10, 180)
+            now_pos_poll_list = Search_Pollution_On_Arc_2D(pollution_list, max_pos_poll_list, True, searching_length_now, moving_angle - 90, moving_angle + 90)
             if(max_pos_poll_list[2] < now_pos_poll_list[2]):
                 searching_length_now = 0
                 last_max_list = max_pos_poll_list
