@@ -13,6 +13,7 @@ import Pollution_Search_2D
 
 import importlib
 importlib.reload(Pollution_Search_2D)
+inportlib.reload(Pollution_Search_3D)
 importlib.reload(Pollution_State_2D_lib)
 importlib.reload(Pollution_State_3D_lib)
 ############################################################################
@@ -519,7 +520,7 @@ def Circular_Survey(pollution_state_2D, searching_methods_2D):
     start_pos_poll_list.append(max_pollution_density)
 
     last_max_list = start_pos_poll_list
-    
+
     plt.scatter(x_start, y_start, c = 'aqua')
 
     searching_range = 30 #探索開始点からの最大探索距離。この範囲を超えると探索打ち切り
@@ -634,11 +635,44 @@ def Execute_2D_Search():
     searching_methods_2D.Calculate_Distance(x_max, y_max, no_noise_x_max, no_noise_y_max)
 
 
+
+def Execute_3D_Search():
+
+    field_size_3D = 40
+    search_deepness = 30
+
+    pollution_state_3D = Pollution_State_3D_lib.Pollution_State_3D(field_size_3D)
+    searching_methods_3D = Pollution_Search_3D.Search_Methods_3D(search_deepness)
+
+
+    max_list, no_noise_pos_poll_list = Circular_Survey_3D(pollution_state_3D, searching_methods_3D)
+
+    x_max, y_max, z_max, max_pollution_density = max_list[0], max_list[1], max_list[2], max_list[3]
+    no_noise_x_max, no_noise_y_max, no_noise_z_max, no_noise_max_pollution = no_noise_pos_poll_list[0],  no_noise_pos_poll_list[1], no_noise_pos_poll_list[2], no_noise_pos_poll_list[3]
+
+    print('真の濃度最高点 x座標  ' + str(no_noise_x_max))
+    print('真の濃度最高点 y座標  ' + str(no_noise_y_max))
+    print('真の濃度最高点 z座標  ' + str(no_noise_z_max))
+    print('真の濃度最高値  ' + str(no_noise_max_pollution))
+
+    print('\n')
+    print('final x_max = ' + str(x_max))
+    print('final y_max = ' + str(y_max))
+    print('final z_max = ' + str(z_max))
+    print('final max_pollution_density = ' + str(max_pollution_density))
+
+
+
+
+
+
+
+
 ######################## main ###########################################
 def main():
 
-    Execute_2D_Search()
-#     #Execute_3D_Search()
+#    Execute_2D_Search()
+     Execute_3D_Search()
 #
 #
 #     pollution_state_3D.Auto_Pollutions_Create(5, 100)
