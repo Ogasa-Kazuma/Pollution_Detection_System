@@ -19,6 +19,40 @@ importlib.reload(Pollution_State_2D_lib)
 importlib.reload(Pollution_State_3D_lib)
 ############################################################################
 
+########################
+##抽象クラスを使う
+##数値の意味が分かりやすいようにもっと変数使う
+##描画用の関数をもっと使いやすくする
+##
+##
+##
+
+
+
+
+
+
+########################### Global Variables ################################
+field_x_length = 50
+field_y_length = 50
+noise_search_deepness = 15
+noise_threshold = 0.3
+#ノイズ閾値
+#ノイズ最高値
+#ノイズ最小値
+#ノイズ発生確率
+#探索深さ
+#探索方向
+#汚染源決定閾値
+
+
+
+
+##########################################################################
+
+
+
+
 
 
 def main():
@@ -32,8 +66,9 @@ def main():
     num_auto_created_pol = 5
     auto_pol_max = 100
 
-    pollution_state_2D.Pollution_State_3D_lib.pollution_state_3D(field_size_3D)
+    pollution_state_3D = Pollution_State_3D_lib.Pollution_State_3D(field_size_3D)
     search_methods_3D = Pollution_Search_3D.Search_Methods_3D(search_deepness)
+
 
 
     pollution_state_3D.Auto_Pollutions_Create(num_auto_created_pol, auto_pol_max)
@@ -46,25 +81,66 @@ def main():
     print("no_noise_z_max = " + str(no_noise_z_max))
     print("max_pollution = " + str(max_pollution))
 
-    pollution_list = pollution_state_3D.get_all_pollution_states()
-    x,y,z,pollute = Detect_Square_Area_Max(pollution_list, 0, 0, 0, 100)
-    print("square_area_max_x = " + str(x))
-    print("square_area_max_y = " + str(y))
-    print("square_area_max_z = " + str(z))
-    print("square_area_max_pollution = " + str(pollute))
 
-    Detect_Max(pollution_list, 1, 1, 1, 45, 45, 50)
+
+    pollution_list = pollution_state_3D.get_all_pollution_states()
+    #search_deepnessの値が大きすぎると、ライブラリの方でlist out of rangeになる。直す
+    max_pos_poll_list  = search_methods_3D.Detect_Square_Area_Max(pollution_list, 0, 0, 0, search_deepness, noise_threshold)
+
+
+    pollution_state_3D.draw_pollution_map()
+
+
+    # search_methods_3D.Detect_Max(pollution_list, 1, 1, 1, 45, 45, 50)
 
     start_position_list = list()
     start_position_list.append(0)
     start_position_list.append(30)
     start_position_list.append(0)
 
-    Search_Pollution_On_Arc(pollution_list, start_position_list,1, 20, -45, -30)
+    rotate_direction = True
+    searching_scope_radius = 20
+    searching_start_angle = -45
+    searching_end_angle = -30
 
-    pollution_state_3D.draw_pollution_map()
 
-    Calculate_Degree(0, 0, 0, 10, 10, 14.141414)
+    last_max_list = list()
+    last_max_list.append(0)
+    last_max_list.append(0)
+    last_max_list.append(0)
+    last_max_list.append(0)
+
+    searching_range = 30 #探索開始点からの最大探索距離。この範囲を超えると探索打ち切り
+    searching_length_now = 0
+
+
+
+
+    while(True):
+        moving_angle, no_use_data = search_methods_3D.Calculate_Degree(last_max_list, max_pos_poll_list)
+
+        while(searching_length_now <= searching_range):
+
+            now_pos_poll_list = search_methods_3D.Search_Pollution_On_Arc(pollution_list, max_pos_poll_list, True, searching_length_now, moving_angle - 90, moving_angle + 90)
+            if(max_pos_poll_list[3] < now_pos_poll_list[3]):
+                searching_length_now = 0
+                last_max_list = max_pos_poll_list
+                max_pos_poll_list = now_pos_poll_list
+                isUpdated = True
+                break
+
+            if(searching_length_now < 5):
+                searching_length_now += 1
+            else:
+                searching_length_now = searching_length_now + searching_range / 5
+
+            if(searching_range < searching_length_now):
+                break
+
+        if(searching_range < searching_length_now):
+            break
+
+
 
 
 

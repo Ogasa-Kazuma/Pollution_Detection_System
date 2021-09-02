@@ -3,59 +3,53 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 from itertools import chain
+from class_pollution_state_creater import Pollution_State_Creater
 ############################################################################
 
 
 ####################### start definition class Create_Density ############################
-class Pollution_State_2D:
+class Pollution_State_Creater_2D(Pollution_State_Creater):
 
-    def __init__(self,measurement_distance,field_size):
+    def __init__(self, field_x_length, field_y_length):
         #インスタンス変数も privateにできる
-        self.__measurement_distance = measurement_distance
-        self.__field_size = field_size
+
+        self.__field_x_length = field_x_length
+        self.__field_y_length = field_y_length
         #x座標の数　→　y方向の数　→　テンソル方向の数
-        self.__base_pollution_list = [[[0.0 for i in range(1)] for j in range(field_size)] for l in range(field_size)]
+        self.__base_pollution_list = [[j for j in range(field_x_length)] for l in range(field_y_length)]
         #この文がなければfloatでもNoneでもないらしい。とりあえずはリストに要素を代入しろということかな？
 
-        self.__list_local_pollution = [[[0.0 for i in range(1)] for j in range(field_size)] for l in range(field_size)]
-        self.__list_random_pollution = [[[0.0 for i in range(1)] for j in range(field_size)] for l in range(field_size)]
-        for x_count in range(self.__field_size):
-            for y_count in range(self.__field_size):
+        self.__list_local_pollution = [[j for j in range(field_x_length)] for l in range(field_y_length)]
+        self.__list_random_pollution = [[j for j in range(field_x_length)] for l in range(field_y_length)]
+        for x_count in range(self.__field_x_length):
+            for y_count in range(self.__field_y_length):
                 self.__base_pollution_list[x_count][y_count] = 0.0
                 self.__list_local_pollution[x_count][y_count] = 0.0
                 self.__list_random_pollution[x_count][y_count] = 0.0
 
-    def create_local_pollution(self, x_center, y_center, scope_radius, max_pollution_density):
+    def create_local_pollution(self, x_begin, y_begin, scope_radius, max_pollution_density):
 
 
         #移動距離に対する濃度の減少量
         self.__pollution_decreasing_step = max_pollution_density / scope_radius
 
 
-        for x_count in range(x_center - scope_radius, x_center + scope_radius, 1):
-            for y_count in range(y_center - scope_radius, y_center + scope_radius, 1):
-                if(0 <= x_count and 0 <= y_count and x_count < self.__field_size and y_count < self.__field_size):
+        for x_count in range(x_begin - scope_radius, x_begin + scope_radius, 1):
+            for y_count in range(y_begin - scope_radius, y_begin + scope_radius, 1):
+                if(0 <= x_count and 0 <= y_count and x_count < self.__field_x_length and y_count < self.__field_y_length):
 
-                    self.__list_local_pollution[x_count][y_count] = max_pollution_density - self.__pollution_decreasing_step * np.sqrt(abs(x_center - x_count) ** (2) + abs(y_center - y_count) ** (2))
+                    self.__list_local_pollution[x_count][y_count] = max_pollution_density - self.__pollution_decreasing_step * np.sqrt(abs(x_begin - x_count) ** (2) + abs(y_begin - y_count) ** (2))
                     if(self.__list_local_pollution[x_count][y_count] < 0):
                         self.__list_local_pollution[x_count][y_count] = 0
                     self.__base_pollution_list[x_count][y_count] = self.__base_pollution_list[x_count][y_count] + self.__list_local_pollution[x_count][y_count]
 
         ret_list_local_pollution = self.__list_local_pollution
-        for x_count in range(self.__field_size):
-            for y_count in range(self.__field_size):
+        for x_count in range(self.__field_x_length):
+            for y_count in range(self.__field_y_length):
                 self.__list_local_pollution[x_count][y_count] = 0.0
 
                 return ret_list_local_pollution
 
-
-
-
-    def draw_pollution_map(self, row, column, graph_number):
-        plt.subplot(row,column,graph_number)
-        for x_count in range(self.__field_size):
-            for y_count in range(self.__field_size):
-                plt.scatter(x_count, y_count,c = "black", alpha = self.__base_pollution_list[x_count][y_count], linewidth = 0)
 
 
     def create_random_pollution(self, probability, start_x, start_y, end_x, end_y, upper_limit, lower_limit):
@@ -80,8 +74,8 @@ class Pollution_State_2D:
     def Adjust_Pollution(self, mode, upper_limit, lower_limit):
     #モード = Falseなら、上限1、下限0の濃度値に調整を行う(切り捨てなど)
         if(not mode):
-            for x_count in range(self.__field_size):
-                for y_count in range(self.__field_size):
+            for x_count in range(self.__field_x_length):
+                for y_count in range(self.__field_y_length):
                     if(self.__base_pollution_list[x_count][y_count] < lower_limit):
                         self.__base_pollution_list[x_count][y_count] = lower_limit
                     elif(upper_limit < self.__base_pollution_list[x_count][y_count]):
@@ -96,76 +90,49 @@ class Pollution_State_2D:
             print('max_base_pollution = ' + str(max_base_pollution))
             division_ratio = max_base_pollution / upper_limit
             print(division_ratio)
-            for x_count in range(self.__field_size):
-                for y_count in range(self.__field_size):
+            for x_count in range(self.__field_x_length):
+                for y_count in range(self.__field_y_length):
                     self.__base_pollution_list[x_count][y_count] = self.__base_pollution_list[x_count][y_count] / division_ratio
 
 
 
     def Auto_Pollutions_Create(self, number, max_pollution):
 
-        x = [self.__field_size + 1 for i in range(number)]
-        y = [self.__field_size + 1 for i in range(number)]
+        x = [self.__field_x_length + 1 for i in range(number)]
+        y = [self.__field_y_length + 1 for i in range(number)]
         pollution_density = [1.1 for i in range(number)]
         radius = [0.0 for i in range(number)]
 
 
         for count in range(number):
-            while(self.__field_size < x[count]):
+            while(self.__field_x_length < x[count]):
                 x[count] = random.random() * 100 + random.random() * 10
-            while(self.__field_size < y[count]):
+            while(self.__field_y_length < y[count]):
                 y[count] = random.random() * 100 + random.random() * 10
             while(max_pollution < pollution_density[count]):
                 pollution_density[count] = random.random() + random.random() * 0.1
-            while(0 == radius[count] or (self.__field_size / 2) < radius[count]):
+            while(0 == radius[count] or (self.__field_x_length / 2) < radius[count]):
                 radius[count] = random.random() * 100 + random.random() * 10
 
 
             self.create_local_pollution(int(x[count]), int(y[count]), int(radius[count]), pollution_density[count])
 
-
-
-    def get_no_noise_max_pollution_point(self):
-
-        no_noise_base_pollution_list = [[[0.0 for i in range(1)] for j in range(self.__field_size)] for l in range(self.__field_size)]
-
-
-
-        for x_count in range(self.__field_size):
-            for y_count in range(self.__field_size):
-                no_noise_base_pollution_list[x_count][y_count] = self.__base_pollution_list[x_count][y_count] - self.__list_random_pollution[x_count][y_count]
-
-        #selfを付けないと、クラス内でも関数内ローカル変数を定義することが出来る
-        no_noise_x_max = 0
-        no_noise_y_max = 0
-
-
-
-        #test_list = np.ravel(no_noise_base_pollution_list)
-
-        #print(sorted(test_list))
-        max_no_noise_pollution = max(chain(*no_noise_base_pollution_list))
-        print(chain(*no_noise_base_pollution_list))
-        #max_no_noise_pollution = max(max(no_noise_base_pollution_list))
-        print('max_no_noise_pollution' + str(max_no_noise_pollution))
-        #print('opfkepowk' + str(sorted(test_list)[-1]))
-        #print(max(test_list))
-
-
-
-        for x_count in range(self.__field_size):
-            for y_count in range(self.__field_size):
-                if(max_no_noise_pollution == no_noise_base_pollution_list[x_count][y_count]):
-                    no_noise_x_max = x_count
-                    no_noise_y_max = y_count
-
-        return no_noise_x_max, no_noise_y_max, no_noise_base_pollution_list[no_noise_x_max][no_noise_y_max]
-
-
     def get_all_pollution_states(self):
         return self.__base_pollution_list
 ##################  end definition class Create_Density #####################################
 
+def main():
+    field_x_length = 40
+    field_y_length = 40
 
-state = Pollution_State_2D(20, 50)
-state.draw_pollution_map(2, 2, 1)
+    state = Pollution_State_Creater_2D(field_x_length, field_y_length)
+    x_begin = 20
+    y_begin = 20
+    scope_radius = 10
+    max_pollution_density = 0.8
+    state.create_local_pollution(x_begin, y_begin, scope_radius, max_pollution_density)
+
+    print(state.get_all_pollution_states())
+
+if __name__ == "__main__":
+    main()

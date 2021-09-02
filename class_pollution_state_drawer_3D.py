@@ -36,9 +36,9 @@ class Pollution_State_Drawer_3D(Pollution_State_Drawer):
         pollutions_converted_to_array = np.array(pollutions)
         x_element_count, y_element_count, z_element_count = pollutions_converted_to_array.shape
 
-        X = [[[j for j in range(0, x_element_count, 1)] for l in range(0, y_element_count, 1)] for k in range(0, z_element_count, 1)]
-        Y = [[[j for j in range(0, x_element_count, 1)] for l in range(0, y_element_count, 1)] for k in range(0, z_element_count, 1)]
-        Z = [[[j for j in range(0, x_element_count, 1)] for l in range(0, y_element_count, 1)] for k in range(0, z_element_count, 1)]
+        X = [[[j for j in range(0, z_element_count, 1)] for l in range(0, y_element_count, 1)] for k in range(0, x_element_count, 1)]
+        Y = [[[j for j in range(0, z_element_count, 1)] for l in range(0, y_element_count, 1)] for k in range(0, x_element_count, 1)]
+        Z = [[[j for j in range(0, z_element_count, 1)] for l in range(0, y_element_count, 1)] for k in range(0, x_element_count, 1)]
 
         #X, Y, Zの値の順序を合わせる。この処理がないと、X, Y, Zの値の対応（組み合わせ？）がおかしくなる。
         #Xについて、この処理がないと、0,1,2 ・・・・ 0,1,2・・・0,1,2・・・となってしまうが
@@ -109,7 +109,7 @@ def main():
 
 
     fig = plt.figure()
-    
+
 
     test_plt = Pollution_State_Drawer_3D(fig, 111)
     test_plt.draw_pollution_map(pollutions, 60)
