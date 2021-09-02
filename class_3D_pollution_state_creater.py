@@ -60,7 +60,7 @@ class Pollution_State_Creater_3D(Pollution_State_Creater):
 
         ret_list_local_pollution = self.__list_local_pollution
         for x_count in range(self.__field_x_length):
-            for y_count  in range(self.__field_y_length):
+            for y_count in range(self.__field_y_length):
                 for z_count in range(self.__field_z_length):
                     self.__list_local_pollution[x_count][y_count][z_count] = 0.0
 
@@ -134,26 +134,27 @@ class Pollution_State_Creater_3D(Pollution_State_Creater):
         x = [self.__field_x_length + 1 for i in range(number)]
         y = [self.__field_y_length + 1 for i in range(number)]
         z = [self.__field_z_length + 1 for i in range(number)]
-        pollution_density = [1.1 for i in range(number)]
+        pollution_density = [101 for i in range(number)] #1.1 ???
         radius = [0.0 for i in range(number)]
 
-        radius_limit = maxRadiusOfPollution
-        print('radius_limit' + str(radius_limit))
+
 
         for count in range(number):
             while(self.__field_x_length < x[count]):
-                x[count] = random.random() * 100 + random.random() * 10
+                x[count] = random.randint(0, self.__field_x_length - 1)
+                #x[count] = random.random() * 100 + random.random() * 10
             while(self.__field_y_length < y[count]):
-                y[count] = random.random() * 100 + random.random() * 10
+                y[count] = random.randint(0, self.__field_y_length - 1)
+                #y[count] = random.random() * 100 + random.random() * 10
             while(self.__field_z_length < z[count]):
-                z[count] = random.random() * 100 + random.random() * 10
+                z[count] = random.randint(0, self.__field_z_length - 1)
+                #z[count] = random.random() * 100 + random.random() * 10
             while(max_pollution < pollution_density[count]):
-                pollution_density[count] = random.random() * 100 + random.random() * 10
-            while(0 == int(radius[count]) or (radius_limit / 2) < radius[count]):
-                radius[count] = random.random() * 100 + random.random() * 10
+                pollution_density[count] = random.uniform(0, 100)
+            while(0 == radius[count] or maxRadiusOfPollution < radius[count]):
+                radius[count] = random.randint(1, maxRadiusOfPollution)
 
-            print(str(int(radius[count])))
-            self.create_local_pollution(int(x[count]), int(y[count]), int(z[count]), int(radius[count]), pollution_density[count])
+            self.create_local_pollution(x[count], y[count], z[count], radius[count], pollution_density[count])
 
 
 
