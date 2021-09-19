@@ -28,9 +28,27 @@ class Pollution_State_Drawer_2D(Pollution_State_Drawer):
 
         pollutions_converted_to_array = np.array(pollutions)
         x_element_count, y_element_count = pollutions_converted_to_array.shape
+
+        new_x = []
+        new_y = []
+        new_pollutions = []
+
         for x_count in range(x_element_count):
             for y_count in range(y_element_count):
-                self.__figure_object.scatter(x_count, y_count,c = "black", alpha = pollutions[x_count][y_count], linewidth = 0)
+                new_x.append(x_count)
+                new_y.append(y_count)
+                new_pollutions.append(pollutions[x_count][y_count])
+
+
+        sc = self.__figure_object.scatter(new_x, new_y, c = new_pollutions, cmap='gray_r', linewidth = 0)
+
+
+
+
+
+
+
+
 
 
 
@@ -47,7 +65,7 @@ def main():
     pollutions =  [[l for l in range(40)] for k in range(40)]
     for x_count in range(40):
         for y_count in range(40):
-                pollutions[x_count][y_count] = 0.5
+                pollutions[x_count][y_count] = 0.01 * x_count
 
     pollution_state_drawer_2D.draw_pollution_map(pollutions)
     pollution_state_drawer_2D_2.draw_pollution_map(pollutions)

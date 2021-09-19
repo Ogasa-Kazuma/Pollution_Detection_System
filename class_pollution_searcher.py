@@ -12,6 +12,7 @@ import common
 import common3d
 import importlib
 import copy
+import time
 importlib.reload(common_of_searcher)
 importlib.reload(common)
 importlib.reload(common3d)
@@ -27,6 +28,10 @@ class PollutionSearcher():
         self.__pathOfSearchedX = list()
         self.__pathOfSearchedY = list()
         self.__pathOfSearchedZ = list()
+        self.__logOfRadiusChange = list() #弧上探索の探索半径の変化を記録（経路の記録用）
+        self.__logOfArcOverallLength = list()
+        self.__lengthOfSearchedLoad = 0
+
         self.__maxPointOf2dFieldX = list()
         self.__maxPointOf2dFieldY = list()
         #todo 名前直す
@@ -35,6 +40,11 @@ class PollutionSearcher():
         self.__centerPointsOfArcZ = list()
 
         self.__radiusToDecideStartMoving2D = 0
+
+        # self.__logOfArcRadius = list()
+        # self.__xPositionsLogOfArcCenter = list()
+        # self.__yPositionsLogOfArcCenter = list()
+        # self.__zPositionsLogOfArcCenter = list()
 
 
 
@@ -51,6 +61,12 @@ class PollutionSearcher():
     def getPathOfSearchedZ(self):
         return self.__pathOfSearchedZ
 
+    def getLogOfRadius(self):
+        return self.__logOfRadiusChange
+
+    def getLogOfArcOverallLength(self):
+        return self.__logOfArcOverallLength
+
     def getMaxPointOf2dFieldX(self):
         return self.__maxPointOf2dFieldX
 
@@ -64,6 +80,8 @@ class PollutionSearcher():
     def getCenterPointsOfArcY(self):
         return self.__centerPointsOfArcY
 
+
+
     def setRadiusToDecideStartMoving2D(self, radius):
         self.__radiusToDecideStartMoving2D = radius
 
@@ -73,6 +91,43 @@ class PollutionSearcher():
 
     def setScopeOfNoiseSearch(self, scopeOfNoiseSearch):
         self.__scopeOfNoiseSearch = scopeOfNoiseSearch
+
+
+    def CalculateSearchingLoadLength(self):
+
+        self.__lengthOfSearchedLoad = 0 #値の初期化
+
+        for i in range(len(self.__pathOfSearchedX)):
+            #1つの円弧の全長 = 全探索経路長- 1つ前までの全探索経路長
+            lastLengthOfSearchedLoad = self.__lengthOfSearchedLoad
+            #長さの計算
+            for j in range(len(self.__pathOfSearchedX[i]) - 1):
+                x_calc = (self.__pathOfSearchedX[i][j + 1] - self.__pathOfSearchedX[i][j] ) ** (2)
+                y_calc = (self.__pathOfSearchedY[i][j + 1] - self.__pathOfSearchedY[i][j] ) ** (2)
+                z_calc = (self.__pathOfSearchedZ[i][j + 1] - self.__pathOfSearchedZ[i][j] ) ** (2)
+                self.__lengthOfSearchedLoad += np.sqrt(x_calc + y_calc + z_calc)
+
+            #1つの円弧の全長 = 全探索経路長- 1つ前までの全探索経路長
+            self.__logOfArcOverallLength.append(self.__lengthOfSearchedLoad - lastLengthOfSearchedLoad)
+        #探索半径の変化による探索経路の全長の増分を考慮
+        for k in range(len(self.__logOfRadiusChange)):
+            self.__lengthOfSearchedLoad += self.__logOfRadiusChange[k]
+
+        print("logOfRadiusChangeの合計" + str(sum(self.__logOfRadiusChange)))
+
+        return self.__lengthOfSearchedLoad
+
+
+    def ClearHistoryOfSearchedLoad(self):
+        """探索した座標、探索した経路の長さの合計、探索用半径の履歴を全て消去"""
+        self.__pathOfSearchedX.clear()
+        self.__pathOfSearchedY.clear()
+        self.__pathOfSearchedZ.clear()
+        self.__logOfRadiusChange.clear()
+        self.__logOfArcOverallLength.clear()
+        self.__lengthOfSearchedLoad = 0
+
+
 
     def DecideStartMovingDirection2D(self, pollutions, xBegin, yBegin, zBegin, radius, referenceAngle, searchAngleRange):
         #探索半径が1未満ならエラー
@@ -102,8 +157,8 @@ class PollutionSearcher():
             return
 
         #z座標が探索可能範囲外なら関数の処理を終了(エラー出力)
-        pollutions_converted_to_array = np.array(pollutions)
-        not_used, not_used, max_z = pollutions_converted_to_array.shape #z座標の探索限界範囲を取得
+        # pollutions_converted_to_array = np.array(pollutions)
+        not_used, not_used, max_z = pollutions.shape #z座標の探索限界範囲を取得
 
         IsSearchable = (zBegin >= 0) and (zBegin <= max_z)
         if(not IsSearchable):
@@ -116,14 +171,16 @@ class PollutionSearcher():
         xPositions, yPositions = common_of_searcher.CalculateAllPositions(xBegin, yBegin, zBegin, radius, referenceAngle, searchAngleRange)
         xPositions, yPositions = common_of_searcher.ConvertPositionsToApproximatePositions(xPositions, yPositions)
         xPositions, yPositions = common_of_searcher.DeletePositionInUnsearchableArea(pollutions, xPositions, yPositions, zBegin)
-        xPositions, yPositions = common_of_searcher.DeleteNoise(pollutions, xPositions, yPositions, zBegin, self.__scopeOfNoiseSearch, self.__noiseThreshold)
+        #xPositions, yPositions = common_of_searcher.DeleteNoise(pollutions, xPositions, yPositions, zBegin, self.__scopeOfNoiseSearch, self.__noiseThreshold)
 
         self.__pathOfSearchedX = common.AppendListIntoList(self.__pathOfSearchedX, xPositions)
         self.__pathOfSearchedY = common.AppendListIntoList(self.__pathOfSearchedY, yPositions)
         zPositions = common.MakeListOfAllTheSameElements(len(xPositions), zBegin) #x, y座標の数とz座標の数を合わせる（z座標は固定だがx、y座標と同じ数だけそんざい　する必要がある）
         self.__pathOfSearchedZ = common.AppendListIntoList(self.__pathOfSearchedZ, zPositions)
+        self.__logOfRadiusChange.append(radius)
 
         xPosition, yPosition, zPosition, MaxConcentration = common_of_searcher.FindMaxConcentrationAndPosition(pollutions, xBegin, yBegin, zBegin, xPositions, yPositions, zBegin)
+
         return xPosition, yPosition, zPosition, MaxConcentration
 
 
@@ -147,6 +204,7 @@ class PollutionSearcher():
             #探索する半径が指定値以上なら処理を終了。濃度値と座標は更新せず返す
             isOut = Radius(i) > max_radius
             if(isOut):
+                self.__logOfRadiusChange.append(Radius(i - 1)) #インデックスをiにすると、実際には探索を行わない大きな半径値を保存してしまう
                 return xBegin, yBegin, zBegin, pollutions[xBegin][yBegin][zBegin]
 
             #しきい値を超える場所と濃度値を探索
@@ -155,6 +213,7 @@ class PollutionSearcher():
 
             #目標とする濃度しきい値より高い値を検出できたら終了
             if(maxConcentration > threshold):
+                self.__logOfRadiusChange.append(Radius(i))
                 self.__centerPointsOfArcX.append(xOfMax)
                 self.__centerPointsOfArcY.append(yOfMax)
                 # self.__pathOfSearchedX = common.AppendNewElementsToList(self.__pathOfSearchedX, xPositions)
@@ -163,6 +222,7 @@ class PollutionSearcher():
 
             #濃度の限界値に達した場合も終了
             if(maxConcentration == limitOfConcentration):
+                self.__logOfRadiusChange.append(Radius(i))
                 self.__centerPointsOfArcX.append(xOfMax)
                 self.__centerPointsOfArcY.append(yOfMax)
                 # self.__pathOfSearchedX = common.AppendNewElementsToList(self.__pathOfSearchedX, xPositions)
@@ -245,10 +305,7 @@ class PollutionSearcher():
             xOfMax, yOfMax, zOfMax, maxConcentration = \
             self.SearchMaxPollutionOn2dField(pollutions, beginPositions, FunctionToSpecifyRadius, maxRadius, searchAngleRange)
 
-            print("xOfMax = " + str(xOfMax))
-            print("yOfMax = " + str(yOfMax))
-            print("zOfMax = " + str(zOfMax))
-            print("maxConcentration = " + str(maxConcentration))
+            #print("maxConcentration = " + str(maxConcentration))
 
             #x, y座標は固定しz座標だけを変化させ、最高濃度値を示すz座標を見つける
             zOfFixedXY, maxConcentrationOfFixedXY = common3d.FindMaxConcentrationOnZ(pollutions, fixedX = xOfMax, fixedY = yOfMax)
@@ -261,4 +318,35 @@ class PollutionSearcher():
             zOfMax = zOfFixedXY
             beginPositions = common.ConvertSingleElementsToList(xOfMax, yOfMax, zOfMax)
             maxConcentration = maxConcentrationOfFixedXY
-            print("new z = " + str(zOfMax))
+
+
+    def SearchTargetPollutionConcentration(self, pollutions, targetConcentration, DecideStartPositions3D, FunctionToSpecifyRadius, maxRadius, searchAngleRange, numberOfSearches):
+        #与えられたパラメータでは探索不可能な場合にエラーを返す
+        if(numberOfSearches < 1 or targetConcentration < 0 or maxRadius < 1 or searchAngleRange < 2):
+            raise ValueError("please set proper value to argument of SearchTargetPollutionConcentration")
+
+        xOfMax, yOfMax, zOfMax, maxConcentration = 0, 0, 0, 0
+        isFoundTargetConcentration = False
+
+        while(1):
+            x, y, z, concentration = self.SearchMaxPollutionOn3dField(pollutions, DecideStartPositions3D, \
+            FunctionToSpecifyRadius, maxRadius, searchAngleRange)
+
+            if(concentration > maxConcentration):
+                xOfMax, yOfMax, zOfMax, maxConcentration = x, y, z, concentration
+
+            if(concentration >= targetConcentration):
+                isFoundTargetConcentration = True
+                print("maxConcentration = " + str(concentration))
+                print("目標濃度値を超える地点を発見しました")
+                return x, y, z, concentration, isFoundTargetConcentration
+
+            numberOfSearches -= 1
+
+            if(numberOfSearches <= 0):
+                print("maxConcentration = " + str(maxConcentration))
+                print("目標濃度値を超える地点は見つかりませんでした")
+                return xOfMax, yOfMax, zOfMax, maxConcentration, isFoundTargetConcentration
+
+
+            #print("3Dフィールドの探索を1回行いました" + str(numberOfSearches))

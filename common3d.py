@@ -14,8 +14,10 @@ import common
 
 
 def IsInSearchableArea(pollutions, xPosition, yPosition, zPosition):
-    pollutions_converted_to_array = np.array(pollutions)
-    max_x, max_y, max_z = pollutions_converted_to_array.shape
+    # pollutions_converted_to_array = np.array(pollutions)
+    # max_x, max_y, max_z = pollutions_converted_to_array.shape
+    # max_x, max_y, max_z = 20, 10, 20
+    max_x, max_y, max_z = pollutions.shape
     max_x = max_x - 1
     max_y = max_y - 1
     max_z = max_z - 1
@@ -84,7 +86,7 @@ def getElementCountZ(collection):
     #Z方向の要素数のみを返す
     arrayedCollection = np.array(collection)
     x, y, zDimensionNumber = arrayedCollection.shape
-    print("z dimension num" + str(zDimensionNumber))
+
     return zDimensionNumber
 
 #todo 関数名変える
@@ -104,3 +106,37 @@ def FindMaxConcentrationOnZ(collection, fixedX, fixedY):
             maxConcentration = collection[fixedX][fixedY][i]
 
     return indexOfMax, maxConcentration
+
+#x,y,z座標の対応の帳尻を合わせる
+def MatchCorrespondenceOfEachCoordinate(collection):
+
+    x, y, z = common.DeriveListElementsCount(collection)
+
+
+    X = [[[j for j in range(0, z, 1)] for l in range(0, y, 1)] for k in range(0, x, 1)]
+    Y = [[[j for j in range(0, z, 1)] for l in range(0, y, 1)] for k in range(0, x, 1)]
+    Z = [[[j for j in range(0, z, 1)] for l in range(0, y, 1)] for k in range(0, x, 1)]
+
+    #X, Y, Zの値の順序を合わせる。この処理がないと、X, Y, Zの値の対応（組み合わせ？）がおかしくなる。
+    #Xについて、この処理がないと、0,1,2 ・・・・ 0,1,2・・・0,1,2・・・となってしまうが
+    #0,0,0,0・・・1,1,1,1,1・・・・・・19,19,19,19となるようにしたい。そのための処理が下記である。
+    for x_count in range(x):
+            for y_count in range(y):
+                for z_count in range(z):
+                        X[x_count][y_count][z_count] = x_count
+
+    #Yについても同様。ただ、Xはfield * fieldの要素数がカウントされてから数値が増え始めるが
+    #Yはfield_size分の要素数がカウントされてから数値が増え始める。つまりYの方が数値の上昇が早い
+    for x_count in range(x):
+        for y_count in range(y):
+            for z_count in range(z):
+                    Y[x_count][y_count][z_count] = y_count
+
+
+    #chainのあとに　* 掛け算のマーク？をつけないとリストの次元が下がらない
+    collection = list(chain(*chain(*collection)))
+    X = list(chain(*chain(*X)))
+    Y = list(chain(*chain(*Y)))
+    Z = list(chain(*chain(*Z)))
+
+    return X, Y, Z, collection

@@ -56,28 +56,40 @@ def ConvertPositionsToApproximatePositions(xPositions, yPositions):
 
 def DeletePositionInUnsearchableArea(pollutions, xPositions, yPositions, zPoint):
 
-    indexToDelete = list()
+    new_xPositions = []
+    new_yPositions = []
 
-    #探索予定の座標のうち、探索不可領域を示す座標を抽出
     for i in range(len(xPositions)): #xとyの要素数は同じ
         if(common3d.IsInSearchableArea(pollutions, xPositions[i], yPositions[i], zPoint)):
-            pass
-        else:
-            indexToDelete.append(i)
+            new_xPositions.append(xPositions[i])
+            new_yPositions.append(yPositions[i])
 
-    #探索不可領域の座標を削除し、探索を行わないようにする
-    CountOfIndexChange = 0  #要素を削除するたびにインデックス数が変わることを考慮
-    for j in indexToDelete:
-        del xPositions[j - CountOfIndexChange]
-        del yPositions[j - CountOfIndexChange]
-        CountOfIndexChange += 1
+    return new_xPositions, new_yPositions
 
-    return xPositions, yPositions
+
+    # indexToDelete = list()
+    #
+    # #探索予定の座標のうち、探索不可領域を示す座標を抽出
+    # for i in range(len(xPositions)): #xとyの要素数は同じ
+    #     if(common3d.IsInSearchableArea(pollutions, xPositions[i], yPositions[i], zPoint)):
+    #         pass
+    #     else:
+    #         indexToDelete.append(i)
+    #
+    # #探索不可領域の座標を削除し、探索を行わないようにする
+    # CountOfIndexChange = 0  #要素を削除するたびにインデックス数が変わることを考慮
+    # for j in indexToDelete:
+    #     del xPositions[j - CountOfIndexChange]
+    #     del yPositions[j - CountOfIndexChange]
+    #     CountOfIndexChange += 1
+
+
 
 
 
 def DeleteNoise(pollutions, xPositions, yPositions, zPoint, scopeOfNoiseSearch, noiseThreshold):
 
+    #2021年9月15日時点、弧状探索においてこの関数が最も処理時間を消費している
     #ノイズだと判定すれば、ノイズ値を示す座標を削除
     #TODO 要素を削除するごとに要素数が変化することを考慮するように変更
 
@@ -118,7 +130,7 @@ def FindMaxConcentrationAndPosition(pollutions, xBegin, yBegin, zBegin, xPositio
     #探索範囲の濃度値が全て同じであれば最大濃度値と座標が
     #分からないので関数の処理を終了
     if(common.IsAllElementsEqual(concentrations)):
-        print("All of elements is equal, can't find max_concentration")
+        # print("All of elements is equal, can't find max_concentration")
         return xBegin, yBegin, zBegin, pollutions[xBegin][yBegin][zBegin]
 
     xOfMax = 0

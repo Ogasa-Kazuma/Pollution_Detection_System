@@ -8,6 +8,7 @@ import math
 from mpl_toolkits.mplot3d.axes3d import Axes3D
 from itertools import chain
 import collections
+import copy
 ###############################################################################
 
 
@@ -133,6 +134,22 @@ def CropList(collection, xPositions, yPositions, zPositions):
     return
 
 
+def ExtractList(collection, xRange, yRange, zRange):
+
+    extractedX = [x for x in range(xRange[0], xRange[-1], 1)]
+    extractedY = [y for y in range(yRange[0], yRange[-1], 1)]
+    extractedZ = [z for z in range(zRange[0], zRange[-1], 1)]
+
+    extractedList = [[[0 for m in range(len(extractedZ))] for n in range(len(extractedY))] for o in range(len(extractedX))]
+
+    for p in range(len(extractedX)):
+        for q in range(len(extractedY)):
+            for r in range(len(extractedZ)):
+                extractedList[p][q][r] = collection[extractedX[p]][extractedY[q]][extractedZ[r]]
+
+
+    return extractedList
+
 
 
 def CalculateEulerAngles(points1, points2):
@@ -175,3 +192,74 @@ def ConvertSingleElementsToList(*elements):
         collection.append(elements[i])
 
     return collection
+
+def CalculateAbsoluteAve(collection):
+    if(not type(collection) == list):
+        raise ValueError('To calculate absolute average, CaluculateAbsoluteAve requires list type argument')
+
+    collection_ = copy.deepcopy(collection)
+
+    #要素1つ1つを絶対値に変換
+    for i in range(len(collection_)):
+        collection_[i] = abs(collection_[i])
+
+    #要素の合計値　/ 要素の数　= 平均値
+    ave = sum(collection_) / len(collection_)
+
+    return ave
+
+
+def CalculateAbsoluteAveOfErrors(collection):
+    if(not type(collection) == list):
+        raise ValueError('To calculate absolute average, CaluculateAbsoluteAve requires list type argument')
+
+    collection_ = copy.deepcopy(collection)
+    I, J = DeriveListElementsCount(collection_)
+
+    for i in range(I):
+        for j in range(J):
+            collection_[i][j] = abs(collection_[i][j])
+
+    sum = [0 for i in range(J)]
+    ave = [0 for i in range(J)]
+
+    for i in range(I):
+        for j in range(J):
+            #要素の合計値　/ 要素の数　= 平均値
+            sum[j] += collection_[i][j]
+
+    for j in range(J):
+        ave[j] = sum[j] / I
+
+    return ave
+
+
+def ave(elements):
+#1次元リストの場合を想定しているので注意
+    ave = 0
+    #要素の合計値を計算
+    for i in range(len(elements)):
+        ave += elements[i]
+
+    #平均 = 合計値 / 要素数
+    ave = ave / len(elements)
+
+    return ave
+
+def sd(elements):
+    """　標準偏差を計算する """
+
+    # 平均を計算
+    mean = ave(elements)
+
+    # 誤差の二乗を求める
+    squareOfErrors = list()
+    for i in range(len(elements)):
+        squareOfErrors.append((elements[i] - mean) ** (2))
+
+    # データの分散(誤差の二乗の平均)を求める
+    variance = ave(squareOfErrors)
+    # 標準偏差は分散の平方根
+    sd = math.sqrt(variance)
+
+    return sd
